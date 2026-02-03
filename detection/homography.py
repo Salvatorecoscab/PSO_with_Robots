@@ -138,9 +138,23 @@ def main():
         interior_ids = [mid for mid in detected if mid not in BORDER_IDS]
 
         for mid in interior_ids:
+            marker_corners = detected[mid]["corner"].reshape(4, 2)
+            c0 = marker_corners[0] # Superior Izquierda
+            c1 = marker_corners[1] # Superior Derecha
             center = get_marker_center(detected[mid]["corner"])
             x, y, z = detected[mid]["tvec"].flatten()
+            # Centro del borde frontal
+            front_midpoint = (c0 + c1) / 2
 
+            # 3. Calcular el vector director respecto al centro del marcador
+            v_x = front_midpoint[0] - center[0]
+            v_y = front_midpoint[1] - center[1]
+            angle_rad = np.arctan2(-v_y, v_x)
+            angle_deg = np.degrees(angle_rad)
+
+            # 5. (Opcional) Normalizar a 0-360°
+            if angle_deg < 0:
+                angle_deg += 360
             # Texto base: posición 3D respecto a la cámara
             text_base = f"ID:{mid} Z:{z:.3f}m Lat:{x:.3f}m"
 
@@ -152,7 +166,7 @@ def main():
                 nx = mx / (DEST_W - 1)
                 ny = my / (DEST_H - 1)
 
-                text_homo = f" | Pos:[{nx:.2f}, {ny:.2f}]"
+                text_homo = f" | Pos:[{nx:.2f}, {ny:.2f}], Angle:{angle_deg:.1f}°"
                 text_base += text_homo
 
                 # Dibujar punto en la imagen original
