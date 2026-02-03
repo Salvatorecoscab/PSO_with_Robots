@@ -168,13 +168,13 @@ def main():
 
                 text_homo = f" | Pos:[{nx:.2f}, {ny:.2f}], Angle:{angle_deg:.1f}°"
                 text_base += text_homo
-
+                
                 # Dibujar punto en la imagen original
                 cv2.circle(frame, (int(center[0]), int(center[1])), 8, (0, 0, 255), -1)
             else:
                 text_base += " | Sin espacio definido"
 
-            print(text_base)
+            # print(text_base)
             cv2.putText(frame, text_base, (10, 30 + (interior_ids.index(mid) * 25)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 

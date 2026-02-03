@@ -1,23 +1,23 @@
+import serial
+import time
+
+# Configura el puerto correcto (COMx en Windows, /dev/ttyUSBx en Linux/Mac)
+puerto = '/dev/cu.usbserial-6' 
+baudios = 115200
+
 try:
-    import serial
-except ImportError:
-    print("Error: pyserial is not installed. Install it with 'pip install pyserial'.")
-    exit(1)
-import json
+    esp8266 = serial.Serial(puerto, baudios, timeout=1)
+    time.sleep(2) # Espera a que se asiente la conexión
+    print("Conectado al ESP8266. Escribe algo:")
 
-# Configura el puerto del ESP8266 conectado por USB
-try:
-    ser = serial.Serial('/dev/cu.usbserial-0001', 115200)
-except AttributeError:
-    print("Error: The 'serial' module does not have 'Serial'. This usually happens if you installed 'serial' instead of 'pyserial' or if there is a file named 'serial.py' in your directory.")
-    exit(1)
-
-def enviar_coordenadas(id_robot, x, y):
-    data = {"id": id_robot, "x": x, "y": y}
-    msg = json.dumps(data) + "\n"
-    ser.write(msg.encode('utf-8'))
-
-if __name__ == "__main__":
-    # Ejemplo de envío de coordenadas
-    enviar_coordenadas(1, 10.5, 20.3)
-    enviar_coordenadas(2, 15.0, 25.7)
+    while True:
+        mensaje = input(">> ")
+        esp8266.write((mensaje + '\n').encode('utf-8'))
+        
+except KeyboardInterrupt:
+    print("\nPrograma finalizado.")
+except Exception as e:
+    print(f"Error: {e}")
+finally:
+    if 'esp8266' in locals():
+        esp8266.close()
