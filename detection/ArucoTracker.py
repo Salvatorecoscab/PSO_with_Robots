@@ -6,7 +6,8 @@ import os
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
 
-
+# import queue
+# frame_queue = queue.Queue(maxsize=2) 
 @dataclass
 class MarkerData:
     """Clase para almacenar los datos de un marcador detectado."""
@@ -45,7 +46,7 @@ class ArucoTracker:
         self.border_order = border_order
         self.dest_w, self.dest_h = dest_size
         self.camera_index = camera_index
-
+        
         # Manager para compartir datos entre procesos
         self._manager = mp.Manager()
         self._markers_dict = self._manager.dict()
@@ -89,7 +90,7 @@ class ArucoTracker:
             [ marker_length/2, -marker_length/2, 0],
             [-marker_length/2, -marker_length/2, 0]
         ], dtype=np.float32)
-
+        
         # Abrir cámara
         cap = cv2.VideoCapture(camera_index)
         
@@ -98,7 +99,14 @@ class ArucoTracker:
             if not ret or frame is None:
                 time.sleep(0.1)
                 continue
+            
+            # if frame_queue.full():
+            #     try:
+            #         .frame_queue.get_nowait()
+            #     except:
+            #         pass
 
+            # self.frame_queue.put(frame)
             corners, ids, _ = detector.detectMarkers(frame)
 
             detected = {}
@@ -279,36 +287,3 @@ class ArucoTracker:
         """Soporte para context manager."""
         self.stop()
 
-
-# if __name__ == "__main__":
-#     # Ejemplo básico de uso
-#     tracker = ArucoTracker(
-#         marker_length=0.08,
-#         calib_file="calibracion_charuco.yml",
-#         border_ids={7, 8, 9, 10},
-#         border_order=[10, 9, 8, 7]
-#     )
-
-#     # Iniciar con o sin visualización
-#     tracker.start(show_visualization=True)
-
-#     try:
-#         while True:
-#             time.sleep(0.5)
-            
-#             # Obtener marcadores
-#             markers = tracker.get_all_markers()
-            
-#             if markers:
-#                 for marker_id, data in markers.items():
-#                     print(f"ID {marker_id}: Pos={data.position}, Ángulo={data.angle:.1f}°")
-            
-#             # O consultar uno específico
-#             marker_1 = tracker.get_marker(1)
-#             if marker_1:
-#                 print(f"Marcador 1 en: {marker_1.position}")
-
-#     except KeyboardInterrupt:
-#         print("\nDeteniendo...")
-#     finally:
-#         tracker.stop()

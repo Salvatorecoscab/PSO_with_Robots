@@ -9,18 +9,14 @@ import serial
 import time
 
 
-
-
-
-
-
 def main():
     # Iniciar tracker
     tracker = ArucoTracker(
         marker_length=0.08,
         calib_file="calibracion_charuco.yml",
         border_ids={7, 8, 9, 10},
-        border_order=[10, 9, 8, 7]
+        border_order=[10, 9, 8, 7],
+        camera_index="http://127.0.0.1:8080/video"
     )
     
     print("Iniciando tracker...")
@@ -36,7 +32,9 @@ def main():
     baudios = 115200
 
     try:
-        esp8266 = serial.Serial(puerto, baudios, timeout=1)
+        
+        # esp8266 = serial.Serial(puerto, baudios, timeout=1)
+
         time.sleep(2) # Espera a que se asiente la conexión
         print("Conectado al ESP8266. Escribe algo:")
 
@@ -50,7 +48,7 @@ def main():
             else:
                 print(f"Marcador {3} no visible")
             mensaje = f"ID {marker.id}: Pos={marker.position}, Ángulo={marker.angle:.1f}°, Z={marker.z_distance:.3f}m" if marker else f"Marcador {3} no visible"
-            esp8266.write((mensaje + '\n').encode('utf-8'))
+            # esp8266.write((mensaje + '\n').encode('utf-8'))
             time.sleep(1)
             
     except KeyboardInterrupt:
@@ -59,8 +57,8 @@ def main():
         print(f"Error: {e}")
 
     finally:
-        if 'esp8266' in locals():
-            esp8266.close()
+        # if 'esp8266' in locals():
+            # esp8266.close()
         tracker.stop()
         print("Tracker detenido")
 
