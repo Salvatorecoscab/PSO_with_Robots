@@ -37,7 +37,7 @@ class ArucoTracker:
                  border_ids: set = {7, 8, 9, 10},
                  border_order: list = [10, 9, 8, 7],
                  dest_size: tuple = (640, 480),
-                 camera_index: int = 0):
+                 camera_index: str = "0"):
         
         self.marker_length = marker_length
         self.aruco_dict = aruco_dict
@@ -93,20 +93,26 @@ class ArucoTracker:
         
         # Abrir cámara
         cap = cv2.VideoCapture(camera_index)
-        
+        # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Buffer mínimo
+        # cap.set(cv2.CAP_PROP_FPS, 30)  # FPS explícito
+
+        # frame_skip_threshold = 0.1  # segundos
+        # last_process_time = time.time()
+
         while running.value:
             ret, frame = cap.read()
+           
             if not ret or frame is None:
-                time.sleep(0.1)
+                time.sleep(0.01)
                 continue
             
-            # if frame_queue.full():
-            #     try:
-            #         .frame_queue.get_nowait()
-            #     except:
-            #         pass
-
-            # self.frame_queue.put(frame)
+            # ===== AÑADIR: Saltar frames antiguos si hay retraso =====
+            # current_time = time.time()
+            # if current_time - last_process_time < frame_skip_threshold:
+            #     # Leer y descartar frames acumulados en el buffer
+            #     cap.grab()  # Descarta frame sin decodificar (más rápido)
+            #     continue
+            # last_process_time = current_time
             corners, ids, _ = detector.detectMarkers(frame)
 
             detected = {}
