@@ -1,0 +1,5 @@
+numpy>=1.23.5
+pyserial>=3.5
+opencv-contrib-python==4.13.0.90
+dataclasses; python_version < "3.7"
+

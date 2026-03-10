@@ -10,7 +10,7 @@ from typing import Dict, Optional, Tuple, List
 # frame_queue = queue.Queue(maxsize=2) 
 @dataclass
 class MarkerData:
-    """Clase para almacenar los datos de un marcador detectado."""
+    """Class to hold data about a detected marker."""
     id: int
     position: Tuple[float, float]
     angle: float
@@ -26,14 +26,13 @@ class MarkerData:
 
 class ArucoTracker:
     """
-    Sistema de tracking de marcadores ArUco con homografía.
-    Usa un proceso separado para la cámara - compatible con macOS.
+    Tracking system from the Arucos using homography.
     """
 
     def __init__(self, 
                  marker_length: float = 0.08,
                  aruco_dict: int = cv2.aruco.DICT_4X4_50,
-                 calib_file: str = "calibracion_charuco.yml",
+                 calib_file: str = "calibration.yml",
                  border_ids: set = {7, 8, 9, 10},
                  border_order: list = [10, 9, 8, 7],
                  dest_size: tuple = (640, 480),
@@ -57,7 +56,9 @@ class ArucoTracker:
 
     @staticmethod
     def _camera_process(markers_dict, running, show_viz, config):
-        """Proceso separado que maneja la cámara y detección."""
+        """
+        Separated process to manage camera capture and ArUco detection, applying homography for position normalization.
+        """
         
         # Desempaquetar configuración
         marker_length = config['marker_length']
@@ -71,7 +72,7 @@ class ArucoTracker:
 
         # Cargar calibración
         if not os.path.exists(calib_file):
-            print(f"ERROR: No se encuentra {calib_file}")
+            print(f"ERROR: not found {calib_file}")
             return
         
         cv_file = cv2.FileStorage(calib_file, cv2.FILE_STORAGE_READ)
@@ -79,7 +80,7 @@ class ArucoTracker:
         dist_coeffs = cv_file.getNode("dist_coeff").mat()
         cv_file.release()
 
-        # Configurar detector
+        # Set detector
         dictionary = cv2.aruco.getPredefinedDictionary(aruco_dict)
         parameters = cv2.aruco.DetectorParameters()
         detector = cv2.aruco.ArucoDetector(dictionary, parameters)
@@ -91,13 +92,9 @@ class ArucoTracker:
             [-marker_length/2, -marker_length/2, 0]
         ], dtype=np.float32)
         
-        # Abrir cámara
+        # Open Camera
         cap = cv2.VideoCapture(camera_index)
-        # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Buffer mínimo
-        # cap.set(cv2.CAP_PROP_FPS, 30)  # FPS explícito
-
-        # frame_skip_threshold = 0.1  # segundos
-        # last_process_time = time.time()
+       
 
         while running.value:
             ret, frame = cap.read()
@@ -106,13 +103,7 @@ class ArucoTracker:
                 time.sleep(0.01)
                 continue
             
-            # ===== AÑADIR: Saltar frames antiguos si hay retraso =====
-            # current_time = time.time()
-            # if current_time - last_process_time < frame_skip_threshold:
-            #     # Leer y descartar frames acumulados en el buffer
-            #     cap.grab()  # Descarta frame sin decodificar (más rápido)
-            #     continue
-            # last_process_time = current_time
+           
             corners, ids, _ = detector.detectMarkers(frame)
 
             detected = {}
@@ -135,7 +126,7 @@ class ArucoTracker:
                 if show_viz.value:
                     cv2.aruco.drawDetectedMarkers(frame, corners, ids)
 
-            # Verificar delimitadores
+            # Verify border presence and compute homography
             border_detected = all(bid in detected for bid in border_order)
             H = None
 
@@ -157,11 +148,11 @@ class ArucoTracker:
                     poly = np.array(border_centers, dtype=np.int32).reshape(-1, 1, 2)
                     cv2.polylines(frame, [poly], isClosed=True, color=(0, 255, 255), thickness=2)
 
-            # Procesar marcadores interiores
+            # Process interior markers
             interior_ids = [mid for mid in detected if mid not in border_ids]
             current_time = time.time()
 
-            # Limpiar diccionario compartido
+            # Clean shared dictionary to remove old markers
             markers_dict.clear()
 
             for mid in interior_ids:
@@ -169,7 +160,7 @@ class ArucoTracker:
                 center = marker_corners.mean(axis=0)
                 x, y, z = detected[mid]["tvec"].flatten()
 
-                # Calcular ángulo
+                # Calculate angle based on the front edge (between corner 0 and 1)
                 c0, c1 = marker_corners[0], marker_corners[1]
                 front_mid = (c0 + c1) / 2
                 v_x = front_mid[0] - center[0]
@@ -179,14 +170,14 @@ class ArucoTracker:
                     angle += 360
 
                 if H is not None:
-                    # Aplicar homografía
+                    # Apply homography to the center point to get normalized position
                     pt = np.array([center[0], center[1], 1.0])
                     transformed = H @ pt
                     transformed /= transformed[2]
                     nx = transformed[0] / (dest_w - 1)
                     ny = transformed[1] / (dest_h - 1)
 
-                    # Guardar en diccionario compartido
+                    # Save in the shared dictionary
                     markers_dict[mid] = {
                         'id': mid,
                         'position': (nx, ny),
@@ -206,7 +197,7 @@ class ArucoTracker:
             if show_viz.value:
                 if not border_detected:
                     missing = [bid for bid in border_order if bid not in detected]
-                    cv2.putText(frame, f"Falta: {missing}", (10, frame.shape[0]-20),
+                    cv2.putText(frame, f"Miss: {missing}", (10, frame.shape[0]-20),
                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                 
                 cv2.imshow("ArUco Tracker", frame)
@@ -218,9 +209,9 @@ class ArucoTracker:
             cv2.destroyAllWindows()
 
     def start(self, show_visualization: bool = False):
-        """Inicia el tracker en un proceso separado."""
+        """Begin tracker in another process"""
         if self._process is not None and self._process.is_alive():
-            print("WARN: El tracker ya está en ejecución")
+            print("WARN: Tracker already running.")
             return
 
         self._running.value = True
@@ -245,7 +236,7 @@ class ArucoTracker:
         self._process.start()
 
     def stop(self):
-        """Detiene el tracker."""
+        """Stop tracker."""
         if self._process is None:
             return
 
@@ -256,14 +247,14 @@ class ArucoTracker:
         self._process = None
 
     def get_marker(self, marker_id: int) -> Optional[MarkerData]:
-        """Obtiene los datos de un marcador específico."""
+        """Get data from a specific marker."""
         data = self._markers_dict.get(marker_id)
         if data is None:
             return None
         return MarkerData(**data)
 
     def get_all_markers(self) -> Dict[int, MarkerData]:
-        """Obtiene todos los marcadores detectados."""
+        """Get data from all detected markers."""
         return {
             mid: MarkerData(**data) 
             for mid, data in self._markers_dict.items()
@@ -271,25 +262,25 @@ class ArucoTracker:
 
 
     def get_marker_position(self, marker_id: int) -> Optional[Tuple[float, float]]:
-        """Obtiene la posición normalizada de un marcador."""
+        """Get the normalized position of a marker."""
         data = self._markers_dict.get(marker_id)
         return data['position'] if data else None
 
     def get_marker_angle(self, marker_id: int) -> Optional[float]:
-        """Obtiene el ángulo de orientación de un marcador."""
+        """Get the orientation angle of a marker."""
         data = self._markers_dict.get(marker_id)
         return data['angle'] if data else None
 
     def is_marker_visible(self, marker_id: int) -> bool:
-        """Verifica si un marcador está siendo detectado."""
+        """Check if a marker is being detected."""
         return marker_id in self._markers_dict
 
     def __enter__(self):
-        """Soporte para context manager."""
+        """Support for context manager."""
         self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Soporte para context manager."""
+        """Support for context manager."""
         self.stop()
 

@@ -163,7 +163,7 @@ class PSOVisualizer:
             self.pso.positions[:, 1],
             c='red', s=100, alpha=0.8, 
             edgecolors='darkred', linewidths=2,
-            label='Partículas', zorder=5
+            label='Particles', zorder=5
         )
         
         # Mejores posiciones personales
@@ -172,7 +172,7 @@ class PSOVisualizer:
             self.pso.pbest_positions[:, 1],
             c='blue', s=50, alpha=0.5,
             marker='x', linewidths=2,
-            label='Mejor personal', zorder=4
+            label='Personal best', zorder=4
         )
         
         # Mejor posición global
@@ -181,7 +181,7 @@ class PSOVisualizer:
             [self.pso.gbest_position[1]],
             c='gold', s=300, alpha=1.0,
             marker='*', edgecolors='orange', linewidths=2,
-            label='Mejor global', zorder=6
+            label='Global best', zorder=6
         )
         
         # Configurar ejes
@@ -199,7 +199,7 @@ class PSOVisualizer:
         # Slider para número de partículas
         ax_particles = plt.axes([0.15, 0.15, 0.3, 0.03])
         self.slider_particles = Slider(
-            ax_particles, 'Partículas', 
+            ax_particles, 'Particles', 
             1, 50, valinit=self.pso.n_particles, valstep=1
         )
         self.slider_particles.on_changed(self.update_particles)
@@ -207,7 +207,7 @@ class PSOVisualizer:
         # Slider para inercia
         ax_w = plt.axes([0.15, 0.10, 0.3, 0.03])
         self.slider_w = Slider(
-            ax_w, 'Inercia (w)', 
+            ax_w, 'W', 
             0.1, 1.5, valinit=self.pso.w
         )
         self.slider_w.on_changed(self.update_w)
@@ -215,7 +215,7 @@ class PSOVisualizer:
         # Slider para c1
         ax_c1 = plt.axes([0.15, 0.05, 0.3, 0.03])
         self.slider_c1 = Slider(
-            ax_c1, 'Cognitivo (c1)', 
+            ax_c1, 'c1', 
             0.0, 3.0, valinit=self.pso.c1
         )
         self.slider_c1.on_changed(self.update_c1)
@@ -327,7 +327,7 @@ class PSOVisualizer:
         
         # Actualizar título
         self.ax.set_title(
-            f'PSO Simulation - Iteración: {self.pso.iteration} | Mejor fitness: {self.pso.gbest_value:.6f}',
+            f'PSO Simulation - Iteration: {self.pso.iteration} | Best fitness: {self.pso.gbest_value:.6f}',
             fontsize=14, fontweight='bold'
         )
         
