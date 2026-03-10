@@ -72,6 +72,6 @@ This will initialize the camera, start tracking the robots, and execute the PSO 
 
 ## Acknowledgments
 * **Georg-August-University Göttingen - Swarm Sensor Practical Course.** - Swarm Sensor Practical Course.
-* Special thanks to **Dr. Michale Bidollahkhani**for his guidance and support throughout the project.
+* Special thanks to **Dr. Michale Bidollahkhani** for his guidance and support throughout the project.
 
 
