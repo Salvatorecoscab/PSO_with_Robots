@@ -6,7 +6,7 @@ This project implements a **Particle Swarm Optimization (PSO)** algorithm using 
 
 ## 💡 Project Concept
 The core of the project is the translation of the mathematical PSO algorithm into a physical environment:
-* **The Problem:** Robots need to find the global optimum (the brightest light) without knowing the full map.
+* **The Problem:** Robots need to find the global optimum (the brightest light)
 * **The Solution:** Using ArUco markers and a top-down camera to replace expensive DWM3000 positioning sensors, providing a cost-effective real-time GPS-like system for the swarm.
 
 ### The Algorithm
